@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { verify } from "hono/jwt";
-import { createPostInput, updatePostInput } from "@quantum-coderr/medium";
+import { createPostInput, updatePostInput } from "@quantum-coderr/medium-common";
 
 export const blogRouter = new Hono<{
     Bindings : {
@@ -91,7 +91,6 @@ blogRouter.get('/bulk', async (c) => {
 		datasourceUrl: c.env?.DATABASE_URL,
 	}).$extends(withAccelerate());
 
-    const body = await c.req.json();
     try {
         const post = await prisma.post.findMany({
             
