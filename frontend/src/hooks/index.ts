@@ -46,25 +46,37 @@ export const useBlog = ({ id }: { id: string }) => {
 }
 
 // Fetch paginated blog feed
-export const useBlogs = () => {
+export const useBlogs = (page: number = 1) => {
     const [loading, setLoading] = useState(true);
     const [blogs, setBlogs] = useState<Blog[]>([]);
+    const [pagination, setPagination] = useState<{
+        currentPage: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    } | null>(null);
 
     useEffect(() => {
-        axios.get(`${BACKEND_URL}/api/v1/blog/bulk`, {
+        setLoading(true);
+        axios.get(`${BACKEND_URL}/api/v1/blog/bulk?page=${page}`, {
             headers: {
                 Authorization: localStorage.getItem("token")
             }
         })
             .then(response => {
                 setBlogs(response.data.data.posts);
+                setPagination(response.data.data.pagination);
                 setLoading(false);
             })
-    }, [])
+            .catch(() => {
+                setLoading(false);
+            });
+    }, [page])
 
     return {
         loading,
-        blogs
+        blogs,
+        pagination
     }
 }
 

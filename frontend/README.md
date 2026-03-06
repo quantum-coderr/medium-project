@@ -28,19 +28,20 @@ src/
 ├── pages/
 │   ├── Signup.tsx            # Registration page
 │   ├── Signin.tsx            # Login page
-│   ├── Blogs.tsx             # Blog feed (list view)
+│   ├── Blogs.tsx             # Blog feed with search support
 │   ├── Blog.tsx              # Single blog post view
-│   └── Publish.tsx           # Create/publish article page
+│   ├── Publish.tsx           # Create/publish article page
+│   └── Profile.tsx           # User profile with Published & Drafts tabs
 ├── components/
 │   ├── Auth.tsx              # Reusable auth form component
-│   ├── Appbar.tsx            # Top navigation bar
-│   ├── BlogCard.tsx          # Post preview card
+│   ├── Appbar.tsx            # Top nav with hamburger drawer & avatar dropdown
+│   ├── BlogCard.tsx          # Post preview card with read time
 │   ├── BlogSkeleton.tsx      # Loading skeleton for blog feed
-│   ├── FullBlog.tsx          # Full article display
-│   ├── Quote.tsx             # Inspirational quote on auth pages
+│   ├── FullBlog.tsx          # Full article with author-only controls
+│   ├── Quote.tsx             # Motivational quote on auth pages
 │   └── Spinner.tsx           # Loading spinner
 └── hooks/
-    └── index.ts              # useBlog, useBlogs custom hooks
+    └── index.ts              # useBlog, useBlogs, useUser custom hooks
 ```
 
 ---
@@ -49,11 +50,25 @@ src/
 
 | Path | Page | Description |
 |------|------|-------------|
-| `/signup` | Signup | User registration |
+| `/signup` | Signup | User registration with motivational quote |
 | `/signin` | Signin | User login |
-| `/blogs` | Blogs | Blog feed with all published posts |
-| `/blog/:id` | Blog | Single blog post detail view |
-| `/publish` | Publish | Create a new article |
+| `/blogs` | Blogs | Blog feed with search bar (Enter to search) |
+| `/blog/:id` | Blog | Single post detail with author-only delete/publish controls |
+| `/publish` | Publish | Create a new article (draft → publish flow) |
+| `/profile` | Profile | User info, Published tab, Drafts tab |
+
+---
+
+## ✨ UI Features
+
+*   **Appbar:** Includes a logo, "New" post button, responsive search bar, and user avatar dropdown menu.
+*   **Hamburger Drawer:** Mobile-friendly slide-out drawer navigation wrapper.
+*   **Blog Card:** Displays snippet, author information, reading time, and an optional "Draft" badge.
+*   **Profile Tabs:** Switch seamlessly between Published posts and Drafts with immediate count feedback.
+*   **Pagination Controls:** "Previous" and "Next" buttons at the bottom of the main feed and profile tabs to navigate efficiently.
+*   **Branding:** Custom `favicon.png` and updated document titles reflecting the "CloudQuill" brand.
+*   **Read Time**: Calculated from word count at 200 WPM
+*   **Date Formatting**: ISO dates displayed as "Mar 6, 2026"
 
 ---
 

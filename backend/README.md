@@ -13,7 +13,7 @@ src/
 │   └── prisma.ts         # Reusable getPrisma() helper
 └── routes/
     ├── auth.ts           # POST /signup, POST /signin
-    ├── user.ts           # GET /me, GET /:authorId/posts
+    ├── user.ts           # GET /me, GET /me/posts, GET /me/drafts
     └── blog.ts           # Full CRUD, search, publish toggle
 ```
 
@@ -39,8 +39,9 @@ src/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/me` | Returns `id`, `email`, `name`, `createdAt`, `postCount` |
-| `GET` | `/:authorId/posts?page=1&limit=10` | Published posts by author (paginated) |
+| `GET` | `/me` | Returns `id`, `email`, `name`, `createdAt`, `postCount` (published only) |
+| `GET` | `/me/posts?page=1&limit=10` | Current user's published posts (paginated) |
+| `GET` | `/me/drafts?page=1&limit=10` | Current user's unpublished drafts (paginated) |
 
 ### Blog (`/api/v1/blog`) — _requires auth_
 
@@ -119,9 +120,10 @@ model Post {
 # Install dependencies
 npm install
 
-# Set up wrangler config
-cp wrangler.jsonc.example wrangler.jsonc
-# Edit wrangler.jsonc with your JWT_SECRET and DIRECT_URL
+# Set up local environment variables for secrets
+# Create a .dev.vars file (gitignored) with:
+#   JWT_SECRET=your_secret
+#   DIRECT_URL=your_prisma_accelerate_url
 
 # Set up .env for Prisma CLI
 echo 'DATABASE_URL="postgresql://user:pass@host:5432/db"' > .env

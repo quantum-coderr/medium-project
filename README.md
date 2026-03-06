@@ -31,10 +31,13 @@ CloudQuill is a full-stack blogging platform deployed entirely on the edge. The 
 |---------|-------------|
 | 🔐 **JWT Authentication** | Secure signup/signin with bcrypt password hashing and 24-hour token expiry |
 | 📝 **Full CRUD** | Create, read, update, and delete articles |
-| 📰 **Draft & Publish** | Posts start as drafts — publish them when ready with a toggle |
+| 📰 **Draft & Publish** | Posts start as drafts — publish/unpublish toggle available to author |
+| 📂 **Drafts Management** | Save incomplete posts as drafts and publish them later. |
 | 🔍 **Search** | Case-insensitive full-text search across titles and content |
-| 👤 **Author Profiles** | View any author's published posts via dedicated endpoint |
-| 📄 **Pagination** | Efficient paginated feeds with metadata (page count, totals, navigation) |
+| 👤 **User Profiles** | Tabbed interface to separate published posts and drafts. |
+| 🍔 **Navigation** | Hamburger drawer menu + avatar dropdown for quick navigation |
+| 📄 **Pagination** | Built-in pagination and page navigation for feeds and profiles. |
+| 🎨 **Custom Branding** | Custom app icon and metadata tailored for CloudQuill. |
 | ✅ **Input Validation** | Shared Zod schemas between frontend and backend via `@quantum-coderr/medium-common` |
 | ⚡ **Edge Deployment** | Backend runs on Cloudflare Workers — sub-millisecond cold starts worldwide |
 
@@ -92,13 +95,13 @@ graph TB
 
 ### Request Lifecycle
 
-1. **User** interacts with the React SPA
-2. **Axios** sends an HTTP request with JWT in the `Authorization` header
-3. **Cloudflare Worker** receives the request at the nearest edge location
-4. **Hono Router** matches the route and runs the **auth middleware**
-5. **JWT** is verified — user ID is extracted and injected into the request context
-6. **Prisma Accelerate** manages a pooled connection to **PostgreSQL**
-7. **Response** is returned to the client as JSON
+1.  **User** interacts with the React SPA
+2.  **Axios** sends an HTTP request with JWT in the `Authorization` header
+3.  **Cloudflare Worker** receives the request at the nearest edge location
+4.  **Hono Router** matches the route and runs the **auth middleware**
+5.  **JWT** is verified — user ID is extracted and injected into the request context
+6.  **Prisma Accelerate** manages a pooled connection to **PostgreSQL**
+7.  **Response** is returned to the client as JSON
 
 ---
 
@@ -127,11 +130,11 @@ graph TB
 
 ### Prerequisites
 
-- **Node.js** ≥ 18
-- **npm** ≥ 9
-- A **PostgreSQL** database (e.g., [Supabase](https://supabase.com), [Neon](https://neon.tech))
-- A **Prisma Accelerate** API key ([prisma.io/accelerate](https://www.prisma.io/data-platform/accelerate))
-- A **Cloudflare** account (for deployment)
+-   **Node.js** ≥ 18
+-   **npm** ≥ 9
+-   A **PostgreSQL** database (e.g., [Supabase](https://supabase.com), [Neon](https://neon.tech))
+-   A **Prisma Accelerate** API key ([prisma.io/accelerate](https://www.prisma.io/data-platform/accelerate))
+-   A **Cloudflare** account (for deployment)
 
 ### Repository Structure
 
@@ -149,9 +152,9 @@ cloudquill/
 │   └── wrangler.jsonc         # Cloudflare Workers config
 ├── frontend/          # React SPA
 │   ├── src/
-│   │   ├── pages/             # Signup, Signin, Blog, Blogs, Publish
-│   │   ├── components/        # Appbar, Auth, BlogCard, FullBlog, etc.
-│   │   └── hooks/             # useBlog, useBlogs custom hooks
+│   │   ├── pages/             # Signup, Signin, Blog, Blogs, Publish, Profile
+│   │   ├── components/        # Appbar, Auth, BlogCard, FullBlog, Quote, etc.
+│   │   └── hooks/             # useBlog, useBlogs, useUser custom hooks
 │   └── vite.config.ts
 ├── common/            # Shared Zod validation schemas
 │   └── src/index.ts           # signupInput, signinInput, createPostInput, updatePostInput
@@ -178,8 +181,12 @@ cp wrangler.jsonc.example wrangler.jsonc
 # Create .env for Prisma migrations
 echo 'DATABASE_URL="postgresql://user:pass@host:5432/dbname"' > .env
 
-# Run database migrations
-npx prisma migrate dev
+# Initialize the database and run migrations
+npx prisma generate
+npx prisma migrate dev --name init
+
+# (Optional) Seed the database with clean demo data
+node seed.js
 
 # Start local dev server
 npm run dev
@@ -214,8 +221,9 @@ npm run dev
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/me` | ✓ | Current user profile and post count |
-| `GET` | `/:authorId/posts` | ✓ | Published posts by a specific author |
+| `GET` | `/me` | ✓ | Current user profile and published post count |
+| `GET` | `/me/posts` | ✓ | Current user's published posts (paginated) |
+| `GET` | `/me/drafts` | ✓ | Current user's unpublished drafts (paginated) |
 
 ### Blog Posts (`/api/v1/blog`)
 

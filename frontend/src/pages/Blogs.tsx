@@ -12,8 +12,11 @@ export const Blogs = () => {
     const [searchParams] = useSearchParams();
     const searchQuery = searchParams.get("search") || "";
 
+    // Pagination state
+    const [page, setPage] = useState(1);
+
     // Feed data (used when not searching)
-    const { loading: feedLoading, blogs: feedBlogs } = useBlogs();
+    const { loading: feedLoading, blogs: feedBlogs, pagination } = useBlogs(page);
 
     // Search data (used when search query exists)
     const [searchLoading, setSearchLoading] = useState(false);
@@ -91,6 +94,29 @@ export const Blogs = () => {
                 )}
             </div>
         </div>
+
+        {/* Pagination Controls (Only show on normal feed, not search) */}
+        {!searched && pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 py-8 pb-16">
+                <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={!pagination.hasPrevPage || loading}
+                    className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    Previous
+                </button>
+                <span className="text-slate-500 text-sm font-medium">
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                <button
+                    onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                    disabled={!pagination.hasNextPage || loading}
+                    className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    Next
+                </button>
+            </div>
+        )}
     </div>
 }
 
