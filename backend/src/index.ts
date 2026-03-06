@@ -1,14 +1,23 @@
 import { Hono } from 'hono';
+import { authRouter } from './routes/auth';
 import { userRouter } from './routes/user';
 import { blogRouter } from './routes/blog';
 import { cors } from 'hono/cors';
+
 const app = new Hono<{
-  Bindings : {
-    DIRECT_URL : string,
+  Bindings: {
+    DIRECT_URL: string,
     JWT_SECRET: string,
   }
 }>();
-app.use("/*",cors())
+
+// CORS — update origins below for production deployment
+app.use("/*", cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
+
+app.route("/api/v1/auth", authRouter);
 app.route("/api/v1/user", userRouter);
 app.route("/api/v1/blog", blogRouter);
 
