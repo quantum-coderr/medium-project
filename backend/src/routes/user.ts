@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
 import { getPrisma } from '../lib/prisma';
+import { verify } from "hono/jwt";
+import { getPrisma } from '../lib/prisma';
 
 export const userRouter = new Hono<{
   Bindings: {
