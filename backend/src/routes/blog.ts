@@ -6,7 +6,7 @@ import { createPostInput, updatePostInput } from "@quantum-coderr/medium-common"
 
 export const blogRouter = new Hono<{
     Bindings : {
-        DATABASE_URL : string,
+        DIRECT_URL : string,
         JWT_SECRET : string,
     },
     Variables : {
@@ -16,8 +16,10 @@ export const blogRouter = new Hono<{
 
 blogRouter.use('/*', async (c,next) => {
     const authHeader = c.req.header("Authorization") || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
+
     try {
-        const user = await verify(authHeader, c.env.JWT_SECRET);
+        const user = await verify(token, c.env.JWT_SECRET);
         if(user){
             c.set("userId", String(user.id));
             await next();
@@ -32,7 +34,7 @@ blogRouter.use('/*', async (c,next) => {
 
 blogRouter.post('/', async (c) => {
     const prisma = new PrismaClient({
-		datasourceUrl: c.env?.DATABASE_URL,
+		datasourceUrl: c.env?.DIRECT_URL,
 	}).$extends(withAccelerate());
 
     const body = await c.req.json();
@@ -60,7 +62,7 @@ blogRouter.post('/', async (c) => {
 
 blogRouter.put('/', async (c) => {
 	const prisma = new PrismaClient({
-		datasourceUrl: c.env?.DATABASE_URL,
+		datasourceUrl: c.env?.DIRECT_URL,
 	}).$extends(withAccelerate());
 
     const body = await c.req.json();
@@ -69,6 +71,7 @@ blogRouter.put('/', async (c) => {
 		c.status(400);
 		return c.json({ error: "invalid input" });
 	}
+    const authorId = c.get("userId");
     try {
         const post = await prisma.post.update({
             where :{
@@ -77,7 +80,7 @@ blogRouter.put('/', async (c) => {
             data: {
                 title: body.title,
                 content: body.content,
-                authorId : 1
+                authorId : Number(authorId)
             }
         }); 
         return c.json({id : post.id});
@@ -88,7 +91,7 @@ blogRouter.put('/', async (c) => {
 
 blogRouter.get('/bulk', async (c) => {
 	const prisma = new PrismaClient({
-		datasourceUrl: c.env?.DATABASE_URL,
+		datasourceUrl: c.env?.DIRECT_URL,
 	}).$extends(withAccelerate());
 
     try {
@@ -104,7 +107,7 @@ blogRouter.get('/bulk', async (c) => {
 
 blogRouter.get('/:id', async (c) => {
 	const prisma = new PrismaClient({
-		datasourceUrl: c.env?.DATABASE_URL,
+		datasourceUrl: c.env?.DIRECT_URL,
 	}).$extends(withAccelerate());
 
     const id = await c.req.param("id");
