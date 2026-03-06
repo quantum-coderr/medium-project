@@ -1,0 +1,304 @@
+<div align="center">
+
+# ☁️ CloudQuill
+
+**A serverless blogging platform built for the modern web.**
+
+[![Cloudflare Workers](https://img.shields.io/badge/Deployed%20on-Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+[Live Demo](#-live-demo) · [Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference)
+
+</div>
+
+---
+
+## 📋 Problem Statement
+
+Publishing platforms like Medium are powerful — but they're monolithic, expensive to host, and opaque to developers looking to learn full-stack architecture. CloudQuill solves this by providing a **lightweight, serverless, open-source alternative** that developers can deploy, customize, and extend on their own infrastructure.
+
+## 💡 Solution
+
+CloudQuill is a full-stack blogging platform deployed entirely on the edge. The backend runs on **Cloudflare Workers** (zero cold starts, globally distributed), the database is managed via **Prisma Accelerate** (connection pooling for serverless), and the frontend is a fast **React SPA** styled with **Tailwind CSS**.
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔐 **JWT Authentication** | Secure signup/signin with bcrypt password hashing and 24-hour token expiry |
+| 📝 **Full CRUD** | Create, read, update, and delete articles |
+| 📰 **Draft & Publish** | Posts start as drafts — publish them when ready with a toggle |
+| 🔍 **Search** | Case-insensitive full-text search across titles and content |
+| 👤 **Author Profiles** | View any author's published posts via dedicated endpoint |
+| 📄 **Pagination** | Efficient paginated feeds with metadata (page count, totals, navigation) |
+| ✅ **Input Validation** | Shared Zod schemas between frontend and backend via `@quantum-coderr/medium-common` |
+| ⚡ **Edge Deployment** | Backend runs on Cloudflare Workers — sub-millisecond cold starts worldwide |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 18, TypeScript, Tailwind CSS, Vite, React Router, Axios |
+| **Backend** | Hono.js, Cloudflare Workers, TypeScript |
+| **Database** | PostgreSQL via Prisma Accelerate |
+| **Auth** | JWT (Hono JWT), bcryptjs |
+| **Validation** | Zod (shared npm package) |
+| **Deployment** | Cloudflare Workers (Wrangler CLI) |
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    subgraph Client
+        A["🌐 React SPA<br/>(Vite + Tailwind)"]
+    end
+
+    subgraph Cloudflare Edge
+        B["⚡ Cloudflare Worker<br/>(Hono.js API)"]
+        C["🔐 JWT Auth<br/>Middleware"]
+    end
+
+    subgraph Data Layer
+        D["🔄 Prisma Accelerate<br/>(Connection Pooling)"]
+        E["🗄️ PostgreSQL<br/>Database"]
+    end
+
+    subgraph Shared
+        F["📦 @quantum-coderr/medium-common<br/>(Zod Schemas)"]
+    end
+
+    A -- "HTTPS Requests" --> B
+    B --> C
+    C -- "Authenticated" --> D
+    D -- "Pooled Connections" --> E
+    F -. "Type-safe validation" .-> A
+    F -. "Type-safe validation" .-> B
+
+    style A fill:#61DAFB,color:#000
+    style B fill:#F38020,color:#fff
+    style C fill:#F59E0B,color:#000
+    style D fill:#5A67D8,color:#fff
+    style E fill:#4169E1,color:#fff
+    style F fill:#10B981,color:#fff
+```
+
+### Request Lifecycle
+
+1. **User** interacts with the React SPA
+2. **Axios** sends an HTTP request with JWT in the `Authorization` header
+3. **Cloudflare Worker** receives the request at the nearest edge location
+4. **Hono Router** matches the route and runs the **auth middleware**
+5. **JWT** is verified — user ID is extracted and injected into the request context
+6. **Prisma Accelerate** manages a pooled connection to **PostgreSQL**
+7. **Response** is returned to the client as JSON
+
+---
+
+## 🖼️ Screenshots
+
+> _Screenshots coming soon — contributions welcome!_
+
+<!-- Add screenshots here:
+![Home Feed](./docs/screenshots/home-feed.png)
+![Blog Post](./docs/screenshots/blog-post.png)
+![Publish](./docs/screenshots/publish.png)
+-->
+
+---
+
+## 🌐 Live Demo
+
+| Service | URL |
+|---------|-----|
+| **Backend API** | [backend.rohansingh.workers.dev](https://backend.rohansingh.workers.dev) |
+| **Frontend** | _Deployment link coming soon_ |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** ≥ 18
+- **npm** ≥ 9
+- A **PostgreSQL** database (e.g., [Supabase](https://supabase.com), [Neon](https://neon.tech))
+- A **Prisma Accelerate** API key ([prisma.io/accelerate](https://www.prisma.io/data-platform/accelerate))
+- A **Cloudflare** account (for deployment)
+
+### Repository Structure
+
+```
+cloudquill/
+├── backend/           # Hono.js API on Cloudflare Workers
+│   ├── src/
+│   │   ├── index.ts           # App entry, CORS, route mounting
+│   │   ├── lib/prisma.ts      # Reusable Prisma helper
+│   │   └── routes/
+│   │       ├── auth.ts        # Signup & Signin
+│   │       ├── user.ts        # Profile & Author posts
+│   │       └── blog.ts        # CRUD, search, publish
+│   ├── prisma/schema.prisma   # Database schema
+│   └── wrangler.jsonc         # Cloudflare Workers config
+├── frontend/          # React SPA
+│   ├── src/
+│   │   ├── pages/             # Signup, Signin, Blog, Blogs, Publish
+│   │   ├── components/        # Appbar, Auth, BlogCard, FullBlog, etc.
+│   │   └── hooks/             # useBlog, useBlogs custom hooks
+│   └── vite.config.ts
+├── common/            # Shared Zod validation schemas
+│   └── src/index.ts           # signupInput, signinInput, createPostInput, updatePostInput
+└── docs/              # Architecture documentation
+```
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/quantum-coderr/cloudquill.git
+cd cloudquill
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+npm install
+
+# Create your Wrangler config from the example
+cp wrangler.jsonc.example wrangler.jsonc
+# Edit wrangler.jsonc — add your JWT_SECRET and Prisma Accelerate DIRECT_URL
+
+# Create .env for Prisma migrations
+echo 'DATABASE_URL="postgresql://user:pass@host:5432/dbname"' > .env
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start local dev server
+npm run dev
+# → http://localhost:8787
+```
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+npm install
+
+# Update src/config.ts with your backend URL
+# For local development: http://localhost:8787
+
+npm run dev
+# → http://localhost:5173
+```
+
+---
+
+## 📡 API Reference
+
+### Authentication (`/api/v1/auth`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/signup` | ✗ | Create account (email, password, name) |
+| `POST` | `/signin` | ✗ | Login and receive JWT |
+
+### Users (`/api/v1/user`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/me` | ✓ | Current user profile and post count |
+| `GET` | `/:authorId/posts` | ✓ | Published posts by a specific author |
+
+### Blog Posts (`/api/v1/blog`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/` | ✓ | Create a new post (draft) |
+| `PUT` | `/` | ✓ | Update a post |
+| `DELETE` | `/:id` | ✓ | Delete own post |
+| `PUT` | `/:id/publish` | ✓ | Toggle publish/unpublish |
+| `GET` | `/search?q=...` | ✓ | Search published posts |
+| `GET` | `/bulk?page=1&limit=10` | ✓ | Paginated published feed |
+| `GET` | `/:id` | ✓ | Single post detail |
+
+All authenticated endpoints require: `Authorization: Bearer <jwt_token>`
+
+---
+
+## 🚢 Deployment
+
+### Backend (Cloudflare Workers)
+
+```bash
+cd backend
+npm run deploy
+# Uses wrangler.jsonc configuration
+# Deploys to: https://<worker-name>.workers.dev
+```
+
+### Frontend
+
+Build the production bundle and deploy to any static hosting (Vercel, Netlify, Cloudflare Pages):
+
+```bash
+cd frontend
+npm run build
+# Output: dist/
+```
+
+---
+
+## 🔮 Future Infrastructure Improvements
+
+| Improvement | Description |
+|-------------|-------------|
+| 📊 **Request Logging Middleware** | Structured logging with request IDs, latency tracking, and error context for debugging |
+| 🛡️ **API Rate Limiting** | Per-IP and per-user rate limiting using Cloudflare's built-in rate limiting or Durable Objects |
+| ⚡ **Caching Layer** | Edge caching for published posts using Cloudflare KV or Cache API to reduce database calls |
+| 📈 **Observability & Monitoring** | Integration with tools like Sentry, Logflare, or Cloudflare Analytics for real-time insights |
+| 🔄 **CI/CD Pipeline** | GitHub Actions workflow for automated testing, linting, and deployment on push |
+| 📉 **API Metrics Dashboard** | Track response times, error rates, and endpoint usage over time |
+| 🖼️ **Image Uploads** | Support for article cover images and inline media via Cloudflare R2 storage |
+| 🏷️ **Tagging System** | Categories and tags for content organization and discovery |
+| 💬 **Comments & Reactions** | Reader engagement features with nested comments and like/bookmark support |
+| 🔑 **OAuth Integration** | Google and GitHub social login alongside email/password |
+
+---
+
+## 📂 Documentation
+
+- **[Architecture Deep Dive](./docs/architecture.md)** — system design, serverless rationale, and request lifecycle
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+**Built with ☁️ by [quantum-coderr](https://github.com/quantum-coderr)**
+
+</div>
