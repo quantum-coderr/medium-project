@@ -12,10 +12,7 @@ const app = new Hono<{
 }>();
 
 // CORS — update origins below for production deployment
-app.use("/*", cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-}));
+app.use("/*", cors());
 
 app.route("/api/v1/auth", authRouter);
 app.route("/api/v1/user", userRouter);
