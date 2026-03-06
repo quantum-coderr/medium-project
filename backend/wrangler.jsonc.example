@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "JWT_SECRET": "YOUR_SECRET_HERE",
+    "DIRECT_URL": "YOUR_PRISMA_ACCELERATE_URL_HERE"
+  }
+}
