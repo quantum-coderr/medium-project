@@ -45,7 +45,11 @@ userRouter.get('/me', async (c) => {
 				email: true,
 				name: true,
 				createdAt: true,
-				_count: { select: { posts: true } }
+				_count: { 
+					select: { 
+						posts: { where: { published: true } } 
+					} 
+				}
 			}
 		});
 
