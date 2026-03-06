@@ -72,10 +72,64 @@ userRouter.get('/me', async (c) => {
 	}
 });
 
-// Get posts by a specific author (published only, paginated)
-userRouter.get('/:userId/posts', async (c) => {
+// Get current user's unpublished drafts (paginated)
+userRouter.get('/me/drafts', async (c) => {
 	const prisma = getPrisma(c.env.DIRECT_URL);
-	const authorId = Number(c.req.param("userId"));
+	const userId = Number(c.get("userId"));
+
+	const page = Number(c.req.query("page") || "1");
+	const limit = Math.min(Number(c.req.query("limit") || "10"), 50);
+	const skip = (page - 1) * limit;
+
+	try {
+		const [posts, totalCount] = await Promise.all([
+			prisma.post.findMany({
+				where: { authorId: userId, published: false },
+				skip,
+				take: limit,
+				orderBy: { createdAt: 'desc' },
+				select: {
+					id: true,
+					title: true,
+					content: true,
+					published: true,
+					createdAt: true,
+					authorId: true,
+					author: {
+						select: { name: true }
+					}
+				}
+			}),
+			prisma.post.count({ where: { authorId: userId, published: false } })
+		]);
+
+		const totalPages = Math.ceil(totalCount / limit);
+
+		return c.json({
+			success: true,
+			data: {
+				posts,
+				pagination: {
+					currentPage: page,
+					totalPages,
+					totalCount,
+					limit,
+					hasNextPage: page < totalPages,
+					hasPrevPage: page > 1
+				}
+			}
+		});
+	} catch (e) {
+		console.error(`[GET DRAFTS] Failed for user ${userId}:`, e);
+		c.status(500);
+		return c.json({ success: false, error: "Failed to fetch drafts" });
+	}
+});
+
+// Get posts by the logged-in author (published only, paginated)
+userRouter.get('/me/posts', async (c) => {
+	const prisma = getPrisma(c.env.DIRECT_URL);
+	const authorId = Number(c.get("userId"));
 
 	const page = Number(c.req.query("page") || "1");
 	const limit = Math.min(Number(c.req.query("limit") || "10"), 50);
