@@ -7,11 +7,47 @@ import { ChangeEvent, useState } from "react";
 export const Publish = () => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [publishing, setPublishing] = useState(false);
     const navigate = useNavigate();
+
+    async function handlePublish() {
+        if (!title.trim() || !description.trim()) {
+            alert("Title and content are required");
+            return;
+        }
+
+        setPublishing(true);
+        try {
+            // Step 1: Create the post (draft)
+            const createRes = await axios.post(`${BACKEND_URL}/api/v1/blog`, {
+                title,
+                content: description
+            }, {
+                headers: {
+                    Authorization: localStorage.getItem("token")
+                }
+            });
+
+            const postId = createRes.data.data.id;
+
+            // Step 2: Immediately publish it
+            await axios.put(`${BACKEND_URL}/api/v1/blog/${postId}/publish`, {}, {
+                headers: {
+                    Authorization: localStorage.getItem("token")
+                }
+            });
+
+            navigate(`/blog/${postId}`);
+        } catch (e) {
+            alert("Failed to publish post");
+            console.error(e);
+            setPublishing(false);
+        }
+    }
 
     return <div>
         <Appbar />
-        <div className="flex justify-center w-full pt-8"> 
+        <div className="flex justify-center w-full pt-8">
             <div className="max-w-screen-lg w-full">
                 <input onChange={(e) => {
                     setTitle(e.target.value)
@@ -20,18 +56,13 @@ export const Publish = () => {
                 <TextEditor onChange={(e) => {
                     setDescription(e.target.value)
                 }} />
-                <button onClick={async () => {
-                    const response = await axios.post(`${BACKEND_URL}/api/v1/blog`, {
-                        title,
-                        content: description
-                    }, {
-                        headers: {
-                            Authorization: localStorage.getItem("token")
-                        }
-                    });
-                    navigate(`/blog/${response.data.id}`)
-                }} type="submit" className="mt-4 inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 hover:bg-blue-800">
-                    Publish post
+                <button
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    type="submit"
+                    className="mt-4 inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {publishing ? "Publishing..." : "Publish post"}
                 </button>
             </div>
         </div>
@@ -50,5 +81,5 @@ function TextEditor({ onChange }: {onChange: (e: ChangeEvent<HTMLTextAreaElement
         </div>
        </div>
     </div>
-    
+
 }

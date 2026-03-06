@@ -62,7 +62,7 @@ src/
 ### `src/config.ts`
 
 ```typescript
-export const BACKEND_URL = "https://backend.rohansingh.workers.dev"
+export const BACKEND_URL = "<YOUR_BACKEND_URL>"
 ```
 
 Update this to point to your backend instance:

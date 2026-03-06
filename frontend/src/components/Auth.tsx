@@ -17,8 +17,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             const payload = type === 'signin'
                 ? { email: postInputs.email, password: postInputs.password }
                 : postInputs;
-            const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, payload);
-            const { jwt } = response.data;
+            const response = await axios.post(`${BACKEND_URL}/api/v1/auth/${type === "signup" ? "signup" : "signin"}`, payload);
+            const jwt = response.data.data.jwt;
             localStorage.setItem("token", jwt);
             navigate("/blogs");
         } catch(e) {
@@ -31,11 +31,11 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     return <div className="h-screen flex justify-center flex-col">
         <div className="flex justify-center">
             <div>
-                <div className="px-10">
+                <div className="px-10 text-center">
                     <div className="text-3xl font-extrabold">
-                        Create an account
+                        {type === "signup" ? "Create an account" : "Sign in to your account"}
                     </div>
-                    <div className="text-slate-500">
+                    <div className="text-slate-500 mt-2">
                         {type === "signin" ? "Don't have an account?" : "Already have an account?" }
                         <Link className="pl-2 underline" to={type === "signin" ? "/signup" : "/signin"}>
                             {type === "signin" ? "Sign up" : "Sign in"}

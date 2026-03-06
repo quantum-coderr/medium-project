@@ -2,16 +2,27 @@ import { useEffect, useState } from "react"
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 
-
 export interface Blog {
-    "content": string;
-    "title": string;
-    "id": number
-    "author": {
-        "name": string
-    }
+    id: number;
+    title: string;
+    content: string;
+    published: boolean;
+    createdAt: string;
+    authorId: number;
+    author: {
+        name: string;
+    };
 }
 
+export interface User {
+    id: number;
+    email: string;
+    name: string;
+    createdAt: string;
+    postCount: number;
+}
+
+// Fetch a single blog post by ID
 export const useBlog = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(true);
     const [blog, setBlog] = useState<Blog>();
@@ -23,7 +34,7 @@ export const useBlog = ({ id }: { id: string }) => {
             }
         })
             .then(response => {
-                setBlog(response.data.post);
+                setBlog(response.data.data.post);
                 setLoading(false);
             })
     }, [id])
@@ -32,8 +43,9 @@ export const useBlog = ({ id }: { id: string }) => {
         loading,
         blog
     }
-
 }
+
+// Fetch paginated blog feed
 export const useBlogs = () => {
     const [loading, setLoading] = useState(true);
     const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -45,7 +57,7 @@ export const useBlogs = () => {
             }
         })
             .then(response => {
-                setBlogs(response.data.post);
+                setBlogs(response.data.data.posts);
                 setLoading(false);
             })
     }, [])
@@ -53,5 +65,37 @@ export const useBlogs = () => {
     return {
         loading,
         blogs
+    }
+}
+
+// Fetch the current logged-in user's profile
+export const useUser = () => {
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        axios.get(`${BACKEND_URL}/api/v1/user/me`, {
+            headers: {
+                Authorization: token
+            }
+        })
+            .then(response => {
+                setUser(response.data.data);
+                setLoading(false);
+            })
+            .catch(() => {
+                setLoading(false);
+            })
+    }, [])
+
+    return {
+        loading,
+        user
     }
 }
