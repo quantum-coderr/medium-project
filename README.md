@@ -19,6 +19,17 @@
 
 Publishing platforms like Medium are powerful — but they're monolithic, expensive to host, and opaque to developers looking to learn full-stack architecture. CloudQuill solves this by providing a **lightweight, serverless, open-source alternative** that developers can deploy, customize, and extend on their own infrastructure.
 
+## 🧠 Key Design Decisions
+
+### Why Cloudflare Workers over a traditional VM?
+A traditional server sits idle 24/7 waiting for requests — you pay for compute even at 3am when nobody is reading blogs. Cloudflare Workers run on V8 isolates directly at the edge, meaning the code only executes when a request arrives. This eliminates idle cost, auto-scales with traffic, and runs in 300+ global locations — so a user in Mumbai hits a nearby edge server instead of a VM sitting in us-east-1.
+
+### Why Hono.js over Express?
+Express is built on top of Node.js APIs like `http.createServer()` — APIs that don't exist in Cloudflare's runtime. Hono is built from scratch using standard Web APIs (`Request`, `Response`, `fetch`) that work anywhere — Cloudflare Workers, Bun, Deno, browsers. It was the only sensible choice for an edge-first backend.
+
+### Why Prisma Accelerate instead of a direct database connection?
+Cloudflare Workers are sandboxed — they can only make HTTP/HTTPS requests outbound, not raw TCP connections. PostgreSQL communicates over TCP, so a direct connection is physically impossible from a Worker. Prisma Accelerate acts as an HTTP proxy that translates Worker requests into TCP database queries. It also maintains a connection pool — instead of hundreds of Worker instances each exhausting PostgreSQL's ~100 connection limit, they all share Accelerate's persistent pool.
+
 ## 💡 Solution
 
 CloudQuill is a full-stack blogging platform deployed entirely on the edge. The backend runs on **Cloudflare Workers** (zero cold starts, globally distributed), the database is managed via **Prisma Accelerate** (connection pooling for serverless), and the frontend is a fast **React SPA** styled with **Tailwind CSS**.
@@ -52,7 +63,7 @@ CloudQuill is a full-stack blogging platform deployed entirely on the edge. The 
 | **Database** | PostgreSQL via Prisma Accelerate |
 | **Auth** | JWT (Hono JWT), bcryptjs |
 | **Validation** | Zod (shared npm package) |
-| **Deployment** | Cloudflare Workers (Wrangler CLI) |
+| **Deployment** | Vercel (Frontend), Cloudflare Workers (Backend) |
 
 ---
 
@@ -122,7 +133,7 @@ graph TB
 | Service | URL |
 |---------|-----|
 | **Backend API** | [api.cloudquill.com](https://api.cloudquill.com) (Placeholder) |
-| **Frontend** | _Deployment link coming soon_ |
+| **Frontend** | [cloudquill-project.vercel.app](https://cloudquill-project.vercel.app/) |
 
 ---
 
@@ -243,7 +254,16 @@ All authenticated endpoints require: `Authorization: Bearer <jwt_token>`
 
 ## 🚢 Deployment
 
+Both frontend and backend are configured for **automatic deployment on every push** to the main branch.
+
+| Service | Platform | Auto-Deploy |
+|---------|----------|-------------|
+| **Frontend** | [Vercel](https://vercel.com) | ✅ Builds and deploys on push |
+| **Backend** | [Cloudflare Workers](https://workers.cloudflare.com) | ✅ Builds and deploys on push |
+
 ### Backend (Cloudflare Workers)
+
+The backend auto-deploys via Cloudflare's Git integration. For manual deployment:
 
 ```bash
 cd backend
@@ -252,9 +272,9 @@ npm run deploy
 # Deploys to: https://<worker-name>.workers.dev
 ```
 
-### Frontend
+### Frontend (Vercel)
 
-Build the production bundle and deploy to any static hosting (Vercel, Netlify, Cloudflare Pages):
+The frontend auto-deploys via Vercel's Git integration. For local build:
 
 ```bash
 cd frontend
@@ -272,7 +292,7 @@ npm run build
 | 🛡️ **API Rate Limiting** | Per-IP and per-user rate limiting using Cloudflare's built-in rate limiting or Durable Objects |
 | ⚡ **Caching Layer** | Edge caching for published posts using Cloudflare KV or Cache API to reduce database calls |
 | 📈 **Observability & Monitoring** | Integration with tools like Sentry, Logflare, or Cloudflare Analytics for real-time insights |
-| 🔄 **CI/CD Pipeline** | GitHub Actions workflow for automated testing, linting, and deployment on push |
+| 🔄 **CI/CD Pipeline** | GitHub Actions for automated testing and linting (deployment is already automated via Vercel and Cloudflare) |
 | 📉 **API Metrics Dashboard** | Track response times, error rates, and endpoint usage over time |
 | 🖼️ **Image Uploads** | Support for article cover images and inline media via Cloudflare R2 storage |
 | 🏷️ **Tagging System** | Categories and tags for content organization and discovery |
