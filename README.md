@@ -52,7 +52,7 @@ CloudQuill is a full-stack blogging platform deployed entirely on the edge. The 
 | **Database** | PostgreSQL via Prisma Accelerate |
 | **Auth** | JWT (Hono JWT), bcryptjs |
 | **Validation** | Zod (shared npm package) |
-| **Deployment** | Cloudflare Workers (Wrangler CLI) |
+| **Deployment** | Vercel (Frontend), Cloudflare Workers (Backend) |
 
 ---
 
@@ -243,7 +243,16 @@ All authenticated endpoints require: `Authorization: Bearer <jwt_token>`
 
 ## 🚢 Deployment
 
+Both frontend and backend are configured for **automatic deployment on every push** to the main branch.
+
+| Service | Platform | Auto-Deploy |
+|---------|----------|-------------|
+| **Frontend** | [Vercel](https://vercel.com) | ✅ Builds and deploys on push |
+| **Backend** | [Cloudflare Workers](https://workers.cloudflare.com) | ✅ Builds and deploys on push |
+
 ### Backend (Cloudflare Workers)
+
+The backend auto-deploys via Cloudflare's Git integration. For manual deployment:
 
 ```bash
 cd backend
@@ -252,9 +261,9 @@ npm run deploy
 # Deploys to: https://<worker-name>.workers.dev
 ```
 
-### Frontend
+### Frontend (Vercel)
 
-Build the production bundle and deploy to any static hosting (Vercel, Netlify, Cloudflare Pages):
+The frontend auto-deploys via Vercel's Git integration. For local build:
 
 ```bash
 cd frontend
@@ -272,7 +281,7 @@ npm run build
 | 🛡️ **API Rate Limiting** | Per-IP and per-user rate limiting using Cloudflare's built-in rate limiting or Durable Objects |
 | ⚡ **Caching Layer** | Edge caching for published posts using Cloudflare KV or Cache API to reduce database calls |
 | 📈 **Observability & Monitoring** | Integration with tools like Sentry, Logflare, or Cloudflare Analytics for real-time insights |
-| 🔄 **CI/CD Pipeline** | GitHub Actions workflow for automated testing, linting, and deployment on push |
+| 🔄 **CI/CD Pipeline** | GitHub Actions for automated testing and linting (deployment is already automated via Vercel and Cloudflare) |
 | 📉 **API Metrics Dashboard** | Track response times, error rates, and endpoint usage over time |
 | 🖼️ **Image Uploads** | Support for article cover images and inline media via Cloudflare R2 storage |
 | 🏷️ **Tagging System** | Categories and tags for content organization and discovery |
